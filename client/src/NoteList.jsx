@@ -12,49 +12,33 @@ import {
 import { Input } from "@/components/ui/input"
 import DialogDemo from './DialogDemo';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function NoteList() {
   const [notes, setNotes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
+    const fetchNotes = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/items`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        setNotes(data);
+      } catch (err) {
+        console.error("Failed to fetch notes:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchNotes();
   }, []);
-
-  const fetchNotes = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No authentication token found');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/api/items`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Accept": "application/json"
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('Fetched notes:', data); // Debug log
-      setNotes(data);
-      setError(null);
-    } catch (err) {
-      console.error("Failed to fetch notes:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async (id) => {
     try {
@@ -67,45 +51,41 @@ function NoteList() {
       });
       if (response.ok) {
         setNotes(notes.filter(note => note._id !== id));
-      } else {
-        throw new Error('Failed to delete note');
       }
     } catch (err) {
       console.error("Delete failed:", err);
     }
   };
 
+  const handleSave = async (updatedNote) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/items/${updatedNote._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedNote),
+      });
+      if (response.ok) {
+        setNotes(notes.map(note => (note._id === updatedNote._id ? updatedNote : note)));
+      }
+    } catch (error) {
+      console.error('Update failed:', error);
+    }
+  };
+
   const filteredNotes = notes.filter((note) =>
-    (note?.title?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-    (note?.content?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
+    note.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    note.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        <NavigationBar />
-        <div className="container mx-auto px-4 py-8 mt-16">
-          <div className="text-center">Loading notes...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen">
-        <NavigationBar />
-        <div className="container mx-auto px-4 py-8 mt-16">
-          <div className="text-center text-red-500">Error: {error}</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen">
       <NavigationBar />
       <div className="container mx-auto px-4 py-8 mt-16">
+        {/* Search Bar */}
         <div className="mb-6">
           <Input
             type="text"
@@ -116,30 +96,41 @@ function NoteList() {
           />
         </div>
 
-        {filteredNotes.length === 0 ? (
+        {/* Notes Grid or Empty State */}
+        {loading ? (
+          <div className="text-center text-muted-foreground">Loading notes...</div>
+        ) : filteredNotes.length === 0 ? (
           <div className="text-center">
-            <p className="text-xl font-semibold mb-2">No notes available</p>
-            <p className="text-muted-foreground">
-              {searchTerm ? "No notes match your search criteria" : "Create your first note to get started"}
-            </p>
-            <Button 
-              variant="outline" 
-              className="mt-4"
-              onClick={() => window.location.href = '/'}
-            >
-              Create Note
-            </Button>
+            <div className="inline-flex flex-col items-center justify-center">
+              <p className="text-xl font-semibold mb-2">No notes available</p>
+              {searchTerm ? (
+                <p className="text-muted-foreground">
+                  No notes match your search criteria
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Create your first note to get started
+                </p>
+              )}
+              <Button 
+                variant="outline" 
+                className="mt-4"
+                onClick={() => window.location.href = '/'}
+              >
+                Create Note
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredNotes.map((note) => (
               <Card key={note._id}>
                 <CardHeader>
-                  <CardTitle>{note.title}</CardTitle>
+                  <CardTitle>{note.name}</CardTitle>
                   <CardDescription>Type: {note.type}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>{note.content}</p>
+                  <p>{note.description}</p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Date: {new Date(note.date).toLocaleDateString()}
                   </p>
