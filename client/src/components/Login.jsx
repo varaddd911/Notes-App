@@ -2,12 +2,28 @@ import { useAuth } from '../contexts/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from './ui/card';
 import { ModeToggle } from './mode-toggle';
+import { useState } from 'react';
 
 export default function Login() {
     const { login } = useAuth();
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     const handleSuccess = async (credentialResponse) => {
-        await login(credentialResponse.credential);
+        setIsLoggingIn(true);
+        try {
+            const success = await login(credentialResponse.credential);
+            if (!success) {
+                throw new Error('Login failed');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+        } finally {
+            setIsLoggingIn(false);
+        }
+    };
+
+    const handleError = () => {
+        console.error('Login Failed');
     };
 
     return (
@@ -25,13 +41,13 @@ export default function Login() {
                         <div className="flex flex-col gap-2">
                             <GoogleLogin
                                 onSuccess={handleSuccess}
-                                onError={() => {
-                                    console.log('Login Failed');
-                                }}
+                                onError={handleError}
+                                useOneTap
                                 theme="filled_black"
                                 shape="pill"
                                 size="large"
                                 width="full"
+                                disabled={isLoggingIn}
                             />
                         </div>
                         <div className="relative">
@@ -40,7 +56,7 @@ export default function Login() {
                             </div>
                             <div className="relative flex justify-center text-sm uppercase">
                                 <span className="bg-background px-2 text-muted-foreground">
-                                    Secure Authentication
+                                    {isLoggingIn ? 'Signing in...' : 'Secure Authentication'}
                                 </span>
                             </div>
                         </div>
