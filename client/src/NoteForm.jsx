@@ -27,25 +27,23 @@ function NoteForm({ addnote }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [type, setType] = useState("");
-  const [date, setDate] = useState(new Date());
-  const [error, setError] = useState("");
+  const [date, setDate] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    if (!title || !content || !type || !date) {
+      alert("Please fill in all fields");
+      return;
+    }
 
     try {
-      if (!title || !content || !type) {
-        setError("Please fill in all required fields");
-        return;
-      }
-
+      // Format date as DD/MM/YYYY for consistency
+      const formattedDate = date ? format(date, "dd/MM/yyyy") : "";
+      
+      // Add note to local state
+      addnote({ title, content, type, date: formattedDate });
+      
       const token = localStorage.getItem('token');
-      if (!token) {
-        setError("You must be logged in to create notes");
-        return;
-      }
-
       const response = await fetch(`${API_URL}/api/items`, {
         method: "POST",
         headers: {
@@ -53,31 +51,26 @@ function NoteForm({ addnote }) {
           "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({
-          title,
-          content,
+          name: title,
+          description: content,
           type,
-          date: format(date || new Date(), "yyyy-MM-dd"),
+          date: formattedDate,
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create note');
+      if (response.ok) {
+        console.log("Note added");
+        // Reset form
+        setTitle("");
+        setContent("");
+        setType("");
+        setDate(null);
+      } else {
+        throw new Error('Failed to add note');
       }
-
-      const savedNote = await response.json();
-      console.log("Note created:", savedNote); // Debug log
-      
-      // Add to local state and reset form
-      addnote(savedNote);
-      setTitle("");
-      setContent("");
-      setType("");
-      setDate(new Date());
-      
     } catch (error) {
-      console.error("Error creating note:", error);
-      setError(error.message || "Failed to create note. Please try again.");
+      console.error("Error adding note:", error);
+      alert("Failed to add note. Please try again.");
     }
   };
 
@@ -85,40 +78,38 @@ function NoteForm({ addnote }) {
     <Card className="w-[350px] md:w-[450px] lg:w-[550px] mx-auto">
       <CardHeader>
         <CardTitle className="text-center text-2xl">ADD A NOTE</CardTitle>
-        {error && (
-          <div className="text-red-500 text-center mt-2">{error}</div>
-        )}
+        <CardDescription></CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid w-full gap-4">
           <div className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="name">Name</Label>
               <Input 
-                id="title"
-                placeholder="Enter note title"
+                className="mt-2" 
+                id="name" 
+                placeholder="Title for the note"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
+                onChange={(e)=>setTitle(e.target.value)}
               />
             </div>
             <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="content">Content</Label>
+              <Label htmlFor="description">Description</Label>
               <Input 
-                id="content"
-                placeholder="Enter note content"
+                className="mt-2 mb-2"
+                id="description"
+                placeholder="Description of your note"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                required
+                onChange={(e)=>setContent(e.target.value)}
               />
             </div>
             <div className="flex flex-col space-y-1.5">
-              <Label htmlFor="type">Type</Label>
-              <Select value={type} onValueChange={setType} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select note type" />
+              <Label htmlFor="framework">Type</Label>
+              <Select value={type} onValueChange={setType}>
+                <SelectTrigger id="framework">
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   <SelectItem value="Personal">Personal</SelectItem>
                   <SelectItem value="Work">Work</SelectItem>
                 </SelectContent>
@@ -129,9 +120,7 @@ function NoteForm({ addnote }) {
               <DatePicker date={date} setDate={setDate} />
             </div>
           </div>
-          <Button type="submit" className="w-full">
-            Add Note
-          </Button>
+          <Button type="submit">Add Note</Button>
         </form>
       </CardContent>
     </Card>

@@ -1,17 +1,13 @@
+import e from 'express';
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 const itemSchema = new Schema({
-  title: {
-    type: String,
-    required: true
-  },
-  content: {
-    type: String,
-    required: true
-  },
+  name: String,
+  description: String,
   type: {
     type: String,
+    enum: ['Personal', 'Work'],
     required: true
   },
   date: {
@@ -23,7 +19,6 @@ const itemSchema = new Schema({
     ref: 'User',
     required: true
   }
-}, { timestamps: true });
-
+});
 const Item = mongoose.model('Item', itemSchema);
 export default Item;
