@@ -3,11 +3,9 @@ import { GoogleLogin } from '@react-oauth/google';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from './ui/card';
 import { ModeToggle } from './mode-toggle';
 import { useState } from 'react';
-import { useToast } from './ui/use-toast';
 
 export default function Login() {
     const { login } = useAuth();
-    const { toast } = useToast();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     const handleSuccess = async (credentialResponse) => {
@@ -19,22 +17,13 @@ export default function Login() {
             }
         } catch (error) {
             console.error('Login error:', error);
-            toast({
-                variant: "destructive",
-                title: "Login Failed",
-                description: "There was a problem signing in with Google. Please try again."
-            });
         } finally {
             setIsLoggingIn(false);
         }
     };
 
     const handleError = () => {
-        toast({
-            variant: "destructive",
-            title: "Login Failed",
-            description: "There was a problem signing in with Google. Please try again."
-        });
+        console.error('Login Failed');
     };
 
     return (
