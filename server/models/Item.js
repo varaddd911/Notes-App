@@ -12,7 +12,6 @@ const itemSchema = new Schema({
   },
   type: {
     type: String,
-    enum: ['Personal', 'Work'],
     required: true
   },
   date: {
@@ -24,7 +23,7 @@ const itemSchema = new Schema({
     ref: 'User',
     required: true
   }
-});
+}, { timestamps: true });
 
 const Item = mongoose.model('Item', itemSchema);
 export default Item;
