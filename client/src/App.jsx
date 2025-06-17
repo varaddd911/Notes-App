@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import { ThemeProvider } from './components/theme-provider'
 import Noteform from './NoteForm'
@@ -9,6 +9,13 @@ import Login from './components/Login'
 function App() {
   const [notes, setNotes] = useState([])
   const { user, loading, error } = useAuth()
+
+  // Clear notes when user is not authenticated
+  useEffect(() => {
+    if (!user) {
+      setNotes([])
+    }
+  }, [user])
 
   const addnote = (note) => {
     setNotes([...notes, { ...note, id: Date.now() }])
