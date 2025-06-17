@@ -39,11 +39,7 @@ const API_URL = import.meta.env.VITE_API_URL;
         try {
             // Format date as DD/MM/YYYY for consistency
             const formattedDate = date ? format(date, "dd/MM/yyyy") : "";
-            
-            // Add note to local state
-            addnote({ title, content, type, date: formattedDate });
-            
-            const token = localStorage.getItem('token');
+              const token = localStorage.getItem('token');
             const response = await fetch(`${API_URL}/api/items`, {
                 method: "POST",
                 headers: {
@@ -59,6 +55,9 @@ const API_URL = import.meta.env.VITE_API_URL;
             });
 
             if (response.ok) {
+                const savedNote = await response.json();
+                // Add the saved note to local state
+                addnote(savedNote);
                 console.log("Note added");
                 // Reset form
                 setTitle("");
