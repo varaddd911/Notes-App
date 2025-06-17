@@ -94,10 +94,13 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error('Error during Google logout:', error);
         }
-        localStorage.removeItem('token');
+        // Clear all auth-related data
+        localStorage.clear(); // Clear all localStorage data
         setUser(null);
         setError(null);
-        setLoading(false);
+        
+        // Force a page reload to clear all state and redirect to login
+        window.location.href = '/';
     };
 
     const value = {
