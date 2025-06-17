@@ -1,6 +1,7 @@
 import { useAuth } from '../contexts/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from './ui/card';
+import { ModeToggle } from './mode-toggle';
 
 export default function Login() {
     const { login } = useAuth();
@@ -11,6 +12,9 @@ export default function Login() {
 
     return (
         <div className="flex items-center justify-center min-h-screen p-4">
+            <div className="fixed top-4 right-4">
+                <ModeToggle />
+            </div>
             <Card className="w-[450px]">
                 <CardHeader className="space-y-2">
                     <CardTitle className="text-3xl font-bold text-center">Welcome to Notes App</CardTitle>

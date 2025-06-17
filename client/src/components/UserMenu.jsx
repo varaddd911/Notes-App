@@ -9,19 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { useAuth } from '../contexts/AuthContext'
-import { useNavigate } from 'react-router-dom'
 
 export function UserMenu() {
   const { user, logout } = useAuth()
-  const navigate = useNavigate()
 
   if (!user) {
     return null
-  }
-
-  const handleLogout = () => {
-    logout()
-    navigate('/', { replace: true })
   }
 
   return (
@@ -44,7 +37,7 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout} className="text-red-600 text-base py-3">
+        <DropdownMenuItem onClick={logout} className="text-red-600 text-base py-3">
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
