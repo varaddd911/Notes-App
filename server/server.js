@@ -51,12 +51,12 @@ import Item from './models/Item.js';
 // API Endpoint
 app.post('/api/items', verifyToken, async (req, res) => {
   try {
-    const { title, content, type, date } = req.body;
+    const { name, description, type, date } = req.body;
     
     // Create a new item with the received data
     const newItem = new Item({ 
-      title, 
-      content, 
+      name, 
+      description, 
       type, 
       date: date ? new Date(date) : new Date(),
       user: req.userId 

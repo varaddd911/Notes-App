@@ -75,10 +75,9 @@ function NoteList() {
       console.error('Update failed:', error);
     }
   };
-
   const filteredNotes = notes.filter((note) =>
-    note.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    note.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (note.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+    (note.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
   );
 
   return (
