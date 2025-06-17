@@ -75,10 +75,9 @@ function NoteList() {
       console.error('Update failed:', error);
     }
   };
-
   const filteredNotes = notes.filter((note) =>
-    note.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    note.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (note?.title?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+    (note?.content?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
   );
 
   return (
@@ -123,14 +122,13 @@ function NoteList() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredNotes.map((note) => (
-              <Card key={note._id}>
+            {filteredNotes.map((note) => (              <Card key={note._id}>
                 <CardHeader>
-                  <CardTitle>{note.name}</CardTitle>
+                  <CardTitle>{note.title}</CardTitle>
                   <CardDescription>Type: {note.type}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>{note.description}</p>
+                  <p>{note.content}</p>
                   <p className="text-sm text-muted-foreground mt-2">
                     Date: {new Date(note.date).toLocaleDateString()}
                   </p>
