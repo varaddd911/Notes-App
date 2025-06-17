@@ -14,7 +14,9 @@ const port = process.env.PORT || 5000;
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://notes-app-henna-gamma.vercel.app'
+  'http://localhost:5000',
+  'https://notes-app-henna-gamma.vercel.app',
+  'https://notes-app-1-zx1g.onrender.com'
 ];
 
 app.use(cors({
@@ -22,7 +24,7 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.log('Blocked origin:', origin); // Debug logging
@@ -31,7 +33,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
 
 app.use(express.json());
@@ -49,33 +51,19 @@ import Item from './models/Item.js';
 // API Endpoint
 app.post('/api/items', verifyToken, async (req, res) => {
   try {
-    const { name, description, type, date } = req.body;
+    const { title, content, type, date } = req.body;
     
-    // Parse the date string (DD/MM/YYYY) and create a valid Date object
-    let formattedDate;
-    if (date) {
-      const [day, month, year] = date.split('/');
-      formattedDate = new Date(year, month - 1, day); // month is 0-based in JS Date
-    } else {
-      formattedDate = new Date();
-    }
-
+    // Create a new item with the received data
     const newItem = new Item({ 
-      name, 
-      description, 
+      title, 
+      content, 
       type, 
-      date: formattedDate,
+      date: date ? new Date(date) : new Date(),
       user: req.userId 
     });
 
     const savedItem = await newItem.save();
-    res.status(201).json({ 
-      message: 'Item created successfully!', 
-      item: {
-        ...savedItem._doc,
-        date: savedItem.date.toLocaleDateString('en-GB') // Format as DD/MM/YYYY
-      }
-    });
+    res.status(201).json(savedItem);
   } catch (error) {
     console.error('Error creating item:', error);
     res.status(500).json({ error: 'Failed to create item', details: error.message });
