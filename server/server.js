@@ -14,8 +14,7 @@ const port = process.env.PORT || 5000;
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:5173',
-  process.env.FRONTEND_URL,
-  'https://your-vercel-frontend-url.vercel.app'  // Replace this with your actual Vercel URL
+  'https://notes-app-henna-gamma.vercel.app'
 ];
 
 app.use(cors({
@@ -29,7 +28,17 @@ app.use(cors({
     }
     return callback(null, true);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Credentials',
+    'Accept'
+  ],
+  exposedHeaders: ['Set-Cookie']
 }));
 app.use(express.json());
 

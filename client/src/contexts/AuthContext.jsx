@@ -16,6 +16,17 @@ export const AuthProvider = ({ children }) => {
         } else {
             setLoading(false);
         }
+
+        // Add message event listener for Google OAuth popup
+        const handleMessage = (event) => {
+            // Verify origin
+            if (event.origin !== window.location.origin) {
+                return;
+            }
+            // Handle OAuth message if needed
+        };
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
     }, []);
 
     const fetchUser = async (token) => {
@@ -23,7 +34,8 @@ export const AuthProvider = ({ children }) => {
             const response = await fetch(`${API_URL}/api/user`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                credentials: 'include'
             });
             if (response.ok) {
                 const userData = await response.json();
@@ -43,19 +55,24 @@ export const AuthProvider = ({ children }) => {
             const response = await fetch(`${API_URL}/api/auth/google`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({ token: googleToken })
             });
 
             if (response.ok) {
                 const data = await response.json();
                 localStorage.setItem('token', data.token);
-                setUser(data.user);
+                await fetchUser(data.token);
+                return true;
+            } else {
+                throw new Error('Failed to login');
             }
         } catch (error) {
             console.error('Login error:', error);
-            throw error;
+            return false;
         }
     };
 
