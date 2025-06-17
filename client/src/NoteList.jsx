@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import MenubarDemo from './Menubar';
+import NavigationBar from './components/NavigationBar';
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -83,7 +83,7 @@ function NoteList() {
 
   return (
     <div className="min-h-screen">
-      <MenubarDemo />
+      <NavigationBar />
       <div className="container mx-auto px-4 py-8 mt-16">
         {/* Search Bar */}
         <div className="mb-6">

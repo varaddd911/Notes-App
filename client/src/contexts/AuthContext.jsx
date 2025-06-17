@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { googleLogout } from '@react-oauth/google';
 
 const AuthContext = createContext(null);
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -48,22 +49,26 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (response.ok) {
-                const { token, user: userData } = await response.json();
-                localStorage.setItem('token', token);
-                setUser(userData);
-                return true;
+                const data = await response.json();
+                localStorage.setItem('token', data.token);
+                setUser(data.user);
             }
-            return false;
         } catch (error) {
             console.error('Login error:', error);
-            return false;
+            throw error;
         }
     };
 
     const handleLogout = () => {
+        // Clean up Google OAuth state
+        googleLogout();
+        // Remove token and user data
         localStorage.removeItem('token');
         setUser(null);
-        setLoading(false);
+        // Add a small delay to allow Google OAuth cleanup
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 100);
     };
 
     return (
