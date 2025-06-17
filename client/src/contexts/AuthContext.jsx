@@ -16,24 +16,15 @@ export const AuthProvider = ({ children }) => {
         } else {
             setLoading(false);
         }
-
-        // Add message event listener for Google OAuth popup
-        const handleMessage = (event) => {
-            // Verify origin
-            if (event.origin !== window.location.origin) {
-                return;
-            }
-            // Handle OAuth message if needed
-        };
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
     }, []);
 
     const fetchUser = async (token) => {
         try {
             const response = await fetch(`${API_URL}/api/user`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 credentials: 'include'
             });
@@ -62,14 +53,14 @@ export const AuthProvider = ({ children }) => {
                 body: JSON.stringify({ token: googleToken })
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
-                await fetchUser(data.token);
-                return true;
-            } else {
-                throw new Error('Failed to login');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
+
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            await fetchUser(data.token);
+            return true;
         } catch (error) {
             console.error('Login error:', error);
             return false;
@@ -77,19 +68,24 @@ export const AuthProvider = ({ children }) => {
     };
 
     const handleLogout = () => {
-        // Clean up Google OAuth state
-        googleLogout();
-        // Remove token and user data
+        try {
+            googleLogout();
+        } catch (error) {
+            console.error('Error during Google logout:', error);
+        }
         localStorage.removeItem('token');
         setUser(null);
-        // Add a small delay to allow Google OAuth cleanup
-        setTimeout(() => {
-            window.location.href = '/';
-        }, 100);
+    };
+
+    const value = {
+        user,
+        login,
+        logout: handleLogout,
+        loading
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout: handleLogout, loading }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

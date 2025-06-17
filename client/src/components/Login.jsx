@@ -39,16 +39,17 @@ export default function Login() {
                 <CardContent className="flex flex-col gap-6">
                     <div className="grid gap-6">
                         <div className="flex flex-col gap-2">
-                            <GoogleLogin
-                                onSuccess={handleSuccess}
-                                onError={handleError}
-                                useOneTap
-                                theme="filled_black"
-                                shape="pill"
-                                size="large"
-                                width="full"
-                                disabled={isLoggingIn}
-                            />
+                            <div className="w-full flex justify-center">
+                                <GoogleLogin
+                                    onSuccess={handleSuccess}
+                                    onError={handleError}
+                                    useOneTap
+                                    theme="filled_black"
+                                    shape="pill"
+                                    size="large"
+                                    disabled={isLoggingIn}
+                                />
+                            </div>
                         </div>
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
