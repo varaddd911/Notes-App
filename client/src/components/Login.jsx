@@ -7,23 +7,28 @@ import { useState } from 'react';
 export default function Login() {
     const { login } = useAuth();
     const [isLoggingIn, setIsLoggingIn] = useState(false);
+    const [error, setError] = useState(null);
 
     const handleSuccess = async (credentialResponse) => {
         setIsLoggingIn(true);
+        setError(null);
         try {
+            console.log('Received Google credential, attempting login...'); // Debug log
             const success = await login(credentialResponse.credential);
             if (!success) {
                 throw new Error('Login failed');
             }
         } catch (error) {
             console.error('Login error:', error);
+            setError(error.message || 'Failed to login. Please try again.');
         } finally {
             setIsLoggingIn(false);
         }
     };
 
     const handleError = () => {
-        console.error('Login Failed');
+        console.error('Google Login Failed');
+        setError('Failed to initialize Google login. Please try again.');
     };
 
     return (
@@ -37,19 +42,31 @@ export default function Login() {
                     <CardDescription className="text-lg text-center">Click below to sign in with Google</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-6">
+                    {error && (
+                        <div className="p-3 text-sm text-red-500 bg-red-100 dark:bg-red-900/20 rounded-md text-center">
+                            {error}
+                        </div>
+                    )}
                     <div className="grid gap-6">
                         <div className="flex flex-col gap-2">
                             <div className="w-full flex justify-center">
                                 <GoogleLogin
                                     onSuccess={handleSuccess}
                                     onError={handleError}
-                                    useOneTap
+                                    useOneTap={false}
                                     theme="filled_black"
                                     shape="pill"
                                     size="large"
                                     disabled={isLoggingIn}
+                                    type="standard"
+                                    login_uri={window.location.origin}
                                 />
                             </div>
+                            {isLoggingIn && (
+                                <div className="text-center text-sm text-muted-foreground">
+                                    Signing in...
+                                </div>
+                            )}
                         </div>
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
@@ -57,7 +74,7 @@ export default function Login() {
                             </div>
                             <div className="relative flex justify-center text-sm uppercase">
                                 <span className="bg-background px-2 text-muted-foreground">
-                                    {isLoggingIn ? 'Signing in...' : 'Secure Authentication'}
+                                    Secure Authentication
                                 </span>
                             </div>
                         </div>
