@@ -2,11 +2,12 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { googleLogout } from '@react-oauth/google';
 
 const AuthContext = createContext(null);
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         // Check for stored token on mount
@@ -16,11 +17,18 @@ export const AuthProvider = ({ children }) => {
         } else {
             setLoading(false);
         }
+
+        // Cleanup function
+        return () => {
+            // Clean up any subscriptions or timeouts here
+        };
     }, []);
 
     const fetchUser = async (token) => {
         try {
+            setError(null);
             const response = await fetch(`${API_URL}/api/user`, {
+                method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'application/json',
@@ -28,21 +36,29 @@ export const AuthProvider = ({ children }) => {
                 },
                 credentials: 'include'
             });
-            if (response.ok) {
-                const userData = await response.json();
-                setUser(userData);
-            } else {
-                handleLogout();
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
             }
+
+            const userData = await response.json();
+            setUser(userData);
         } catch (error) {
             console.error('Error fetching user:', error);
+            setError('Failed to fetch user data. Please try logging in again.');
             handleLogout();
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const login = async (googleToken) => {
         try {
+            setLoading(true);
+            setError(null);
+
+            console.log('Attempting login with API URL:', API_URL); // Debug log
+
             const response = await fetch(`${API_URL}/api/auth/google`, {
                 method: 'POST',
                 headers: {
@@ -54,7 +70,8 @@ export const AuthProvider = ({ children }) => {
             });
 
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Login failed');
             }
 
             const data = await response.json();
@@ -63,11 +80,15 @@ export const AuthProvider = ({ children }) => {
             return true;
         } catch (error) {
             console.error('Login error:', error);
+            setError(error.message || 'Failed to login. Please try again.');
             return false;
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleLogout = () => {
+        setLoading(true);
         try {
             googleLogout();
         } catch (error) {
@@ -75,13 +96,16 @@ export const AuthProvider = ({ children }) => {
         }
         localStorage.removeItem('token');
         setUser(null);
+        setError(null);
+        setLoading(false);
     };
 
     const value = {
         user,
         login,
         logout: handleLogout,
-        loading
+        loading,
+        error
     };
 
     return (
