@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+const API_URL = import.meta.env.VITE_API_URL;
+
  function NoteForm({ addnote }) {
      const [title, setTitle] = useState("");
      const [content, setContent] = useState("");
@@ -42,15 +44,15 @@ import {
             addnote({ title, content, type, date: formattedDate });
             
             const token = localStorage.getItem('token');
-            const response = await fetch("http://localhost:5000/api/items", {
+            const response = await fetch(`${API_URL}/api/items`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    name: title,
-                    description: content,
+                    title,
+                    content,
                     type,
                     date: formattedDate,
                 }),
